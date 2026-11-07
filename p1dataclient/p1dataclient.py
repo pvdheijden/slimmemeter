@@ -45,15 +45,15 @@ class P1DataClient(object):
         while True:
             p1data_line = self.serial.readline()
             if len(p1data) == 0:
-                if p1data_line[0] == '/':
+                if p1data_line[0] == 47:
                     p1data = p1data_line
                 else:
                     pass
             else:
                 p1data += p1data_line
-                if p1data_line[0] == '!':
+                if p1data_line[0] == 33:
                     logging.debug('received raw p1data:\n%s', p1data)
-                    return p1data
+                    return p1data.decode('utf-8')
                 else:
                     pass
 
