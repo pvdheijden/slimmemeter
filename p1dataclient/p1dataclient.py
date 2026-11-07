@@ -10,6 +10,7 @@ from serial import Serial, EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 
 import prometheus_client as PrometheusClient
 from p1datametrics import P1DataMetrics
+from p1telegram import TelegramAssembler, is_valid
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -20,6 +21,7 @@ class P1DataClient(object):
     def __init__(self, serial):
         self.serial = Serial(serial, 115200,
                              bytesize=EIGHTBITS, parity=PARITY_NONE, stopbits=STOPBITS_ONE)
+        self.assembler = TelegramAssembler()
 
         self.tariff1_delivered_reading_gauge = PrometheusClient.Gauge(
             'tariff1_delivered_reading', 'tariff-1 delivered reading', ['elec_eid'])
@@ -35,27 +37,25 @@ class P1DataClient(object):
             'l3_power_delivered', 'L3 Power delivered', ['elec_eid', 'tariff_indicator'])
         self.gas_delivered_reading_gauge = PrometheusClient.Gauge(
             'gas_delivered_reading', 'Gas delivered', ['gas_eid'])
+        self.crc_errors_counter = PrometheusClient.Counter(
+            'p1_telegram_crc_errors', 'Telegrams discarded because of an invalid CRC')
 
         PrometheusClient.start_http_server(8000)
 
     def receive(self):
-        """receive p1 data"""
+        """receive p1 data, telegrams with an invalid CRC are discarded"""
 
-        p1data = ''
         while True:
-            p1data_line = self.serial.readline()
-            if len(p1data) == 0:
-                if p1data_line[0] == 47:
-                    p1data = p1data_line
-                else:
-                    pass
-            else:
-                p1data += p1data_line
-                if p1data_line[0] == 33:
-                    logging.debug('received raw p1data:\n%s', p1data)
-                    return p1data.decode('utf-8')
-                else:
-                    pass
+            p1data = self.assembler.feed(self.serial.readline())
+            if p1data is None:
+                continue
+
+            logging.debug('received raw p1data:\n%s', p1data)
+            if is_valid(p1data):
+                return p1data.decode('utf-8')
+
+            self.crc_errors_counter.inc()
+            logging.warning('discarded telegram with invalid CRC')
 
     def store(self, metrics):
         """expose metrics to prometheus"""
