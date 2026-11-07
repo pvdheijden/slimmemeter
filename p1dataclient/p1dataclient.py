@@ -89,7 +89,7 @@ class P1DataClient(object):
             ).set(metrics.l3_power_delivered()[0] if tariff_indicator == metrics.tariff_indicator() else 0)
 
         self.gas_delivered_reading_gauge.labels(
-            gas_eid=metrics.elec_eid()
+            gas_eid=metrics.gas_eid()
         ).set(metrics.gas_delivered_reading()[0])
 
     def run(self):
