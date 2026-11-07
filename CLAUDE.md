@@ -38,7 +38,7 @@ The two services are independent long-running scripts with the same shape: a cli
 
 **`p1dataclient/`** separates I/O from parsing:
 - `p1dataclient.py` owns the serial port (115200 8N1) and the metrics. `receive()` blocks until it has a telegram with a valid CRC.
-- `p1telegram.py` does the framing (`/` line to `!` line) and CRC check on raw bytes, before anything is decoded. Telegrams that fail are dropped and counted in `p1_telegram_crc_errors_total`.
+- `p1telegram.py` does the framing (`/` line to `!` line) and CRC check on raw bytes, before anything is decoded. Telegrams that fail are dropped and counted in `p1_telegram_crc_errors_total`. `readline()` has a timeout and can return part of a line, so `TelegramAssembler.feed()` buffers until a line is complete.
 - `p1datametrics.py` is the pure parser. Its module docstring is an annotated example telegram, and `P1DataMetrics` maps OBIS codes (such as `1-0:1.8.1`) to lists of parenthesised values.
 
 **`weather/weather.py`** polls the OpenWeatherMap One Call API every 60s for a fixed location. `weather/__init__.py` imports a nonexistent `temperature` module, so `weather` also only works as a script.
@@ -53,6 +53,8 @@ The two services are independent long-running scripts with the same shape: a cli
 - **Gas is a special case.** Its OBIS entry has the timestamp first, so the reading is at index `[1]`, and its M-Bus channel is looked up from device type `003` rather than assumed to be 1.
 - **Metric names are an interface.** `conf/dashboard.json` queries gauges by name and label, so renaming one breaks the dashboard, and Prometheus history stays under the old name.
 - **`power_delivered` and `l{1,2,3}_power_delivered` are published for both `tariff_indicator` labels.** The active tariff gets the value and the other gets 0, which the dashboard's per-tariff panels rely on.
+- **A silent meter must stay visible.** Gauges keep their last value when telegrams stop, so `p1_last_telegram_timestamp_seconds` is what shows an outage (`time() - p1_last_telegram_timestamp_seconds` on the dashboard).
+- **Crashing is the recovery path.** supervisord restarts the client on unhandled exceptions such as `SerialException`, so don't add a broad `except` around the receive loop.
 - **Temperature is in Kelvin.** The API call sets no `units`, and the dashboard subtracts 273.15.
 - **Target platform is old.** Binaries are ARMv6 on a Pi Zero, so check that new dependencies are available there.
 

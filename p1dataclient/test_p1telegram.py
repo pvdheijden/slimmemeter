@@ -1,6 +1,6 @@
 import unittest
 
-from .p1telegram import TelegramAssembler, crc16, is_valid
+from .p1telegram import MAX_LINE_LENGTH, StalenessMonitor, TelegramAssembler, crc16, is_valid
 
 TELEGRAM = (
     b'/KFM5KAIFA-METER\r\n'
@@ -105,6 +105,63 @@ class TestTelegramAssembler(unittest.TestCase):
             self.assembler.feed(line)
         self.assertIsNone(self.assembler.feed(b''))
         self.assertEqual(feed_all(self.assembler, b''.join(TELEGRAM.splitlines(keepends=True)[3:])), [TELEGRAM])
+
+    def test_timeout_inside_any_line(self):
+        for split in range(1, len(TELEGRAM)):
+            assembler = TelegramAssembler()
+            frames = feed_all(assembler, TELEGRAM[:split])
+            self.assertIsNone(assembler.feed(b''))
+            frames += feed_all(assembler, TELEGRAM[split:])
+            self.assertEqual(frames, [TELEGRAM], 'split at byte %d' % split)
+
+    def test_line_ending_never_arrives(self):
+        self.assertIsNone(self.assembler.feed(b'x' * (MAX_LINE_LENGTH + 1)))
+        self.assertEqual(self.assembler.partial, b'')
+        self.assertEqual(feed_all(self.assembler, TELEGRAM), [TELEGRAM])
+
+
+class TestStalenessMonitor(unittest.TestCase):
+    """Outage detection tests"""
+
+    def setUp(self):
+        self.now = 1000
+        self.monitor = StalenessMonitor(30, clock=lambda: self.now)
+
+    def test_not_stale_before_limit(self):
+        self.now += 29
+        self.monitor.check()
+        self.assertFalse(self.monitor.stale)
+
+    def test_stale_at_limit(self):
+        self.now += 30
+        with self.assertLogs('root', 'WARNING'):
+            self.monitor.check()
+        self.assertTrue(self.monitor.stale)
+
+    def test_warns_once_per_outage(self):
+        self.now += 30
+        with self.assertLogs('root', 'WARNING') as logs:
+            self.monitor.check()
+            self.now += 30
+            self.monitor.check()
+        self.assertEqual(len(logs.records), 1)
+
+    def test_received_resets(self):
+        self.now += 29
+        self.monitor.received()
+        self.now += 29
+        self.monitor.check()
+        self.assertFalse(self.monitor.stale)
+
+    def test_warns_again_after_recovery(self):
+        self.now += 30
+        with self.assertLogs('root', 'WARNING'):
+            self.monitor.check()
+        self.monitor.received()
+        self.assertFalse(self.monitor.stale)
+        self.now += 30
+        with self.assertLogs('root', 'WARNING'):
+            self.monitor.check()
 
 
 if __name__ == '__main__':
