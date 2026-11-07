@@ -32,6 +32,8 @@ cd p1dataclient && python3 p1dataclient.py /dev/serial0   # needs the meter on a
 cd weather && python3 weather.py
 ```
 
+Both services log at INFO. Set `LOG_LEVEL=DEBUG` to include raw telegrams and parsed values, which on the Pi goes in the program's `environment` line in its supervisord config.
+
 ## Architecture
 
 The two services are independent long-running scripts with the same shape: a client class that creates Prometheus gauges and starts the metrics HTTP server in `__init__`, then a `run()` loop of fetch and `store()`, plus a SIGTERM handler under `__main__`.

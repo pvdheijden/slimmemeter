@@ -2,6 +2,7 @@
 Receive P1-data from slimmemeter via UART and store into Prometeus to be presented with Grafana.
 """
 
+import os
 import sys
 import signal
 import logging
@@ -12,7 +13,8 @@ import prometheus_client as PrometheusClient
 from p1datametrics import P1DataMetrics
 from p1telegram import StalenessMonitor, TelegramAssembler, is_valid
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO').upper(),
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 SERIAL_TIMEOUT_SECONDS = 5
 STALE_AFTER_SECONDS = 30

@@ -5,6 +5,7 @@ https://api.openweathermap.org/data/2.5/onecall?lat=33.441792&lon=-94.037689&exc
 
 """
 
+import os
 import sys
 from signal import SIGTERM, signal
 import logging
@@ -14,7 +15,8 @@ import time
 
 import prometheus_client as PrometheusClient
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO').upper(),
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 class TemperatureClient(object):
     def __init__(self):
