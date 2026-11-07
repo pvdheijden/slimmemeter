@@ -60,60 +60,88 @@ class P1DataMetrics(object):
 
         logging.debug('parsed p1data:\n%s', str(self.metrics))
 
+        self.gas_channel = self._find_gas_channel()
+
+    def _find_gas_channel(self):
+        """Return the M-Bus channel of the gas meter, device type 003, which is not always channel 1"""
+        for obis, values in sorted(self.metrics.items()):
+            match = re.fullmatch('0-(\\d+):24\\.1\\.0', obis)
+            if match is not None and values[:1] == ['003']:
+                return match.group(1)
+        return '1'
+
+    def _text(self, obis):
+        """Return the first value of obis as text, '' if it is absent or empty"""
+        values = self.metrics.get(obis)
+        return values[0] if values else ''
+
+    def _reading(self, obis, index=0):
+        """Return the 'value*unit' at index of obis as (value, unit), None if it is absent or malformed"""
+        values = self.metrics.get(obis)
+        if values is None:
+            return None
+
+        try:
+            value, unit = values[index].split('*')
+            return float(value), unit
+        except (IndexError, ValueError):
+            logging.warning('ignoring malformed value for %s: %s', obis, values)
+            return None
+
     def elec_eid(self):
-        return self.metrics['0-0:96.1.1'][0] if '0-0:96.1.1' in self.metrics else ''
+        return self._text('0-0:96.1.1')
 
     def gas_eid(self):
-        return self.metrics['0-1:96.1.0'][0] if '0-1:96.1.0' in self.metrics else ''
+        return self._text('0-%s:96.1.0' % self.gas_channel)
 
     def tariff1_delivered_reading(self):
-        if '1-0:1.8.1' in self.metrics:
-            value = self.metrics['1-0:1.8.1'][0].split('*') 
-            return float(value[0]), value[1]
-        else:
-            return 0, ''
+        return self._reading('1-0:1.8.1')
 
     def tariff2_delivered_reading(self):
-        if '1-0:1.8.2' in self.metrics:
-            value = self.metrics['1-0:1.8.2'][0].split('*')
-            return float(value[0]), value[1]
-        else:
-            return 0, ''
+        return self._reading('1-0:1.8.2')
 
     def tariff_indicator(self):
-        return int(self.metrics['0-0:96.14.0'][0]) if '0-0:96.14.0' in self.metrics else None
+        text = self._text('0-0:96.14.0')
+        return int(text) if text.isdigit() else None
 
     def power_delivered(self):
-        if '1-0:1.7.0' in self.metrics:
-            value = self.metrics['1-0:1.7.0'][0].split('*')
-            return float(value[0]), value[1]
-        else:
-            return 0, ''
+        return self._reading('1-0:1.7.0')
 
     def l1_power_delivered(self):
-        if '1-0:21.7.0' in self.metrics:
-            value = self.metrics['1-0:21.7.0'][0].split('*')
-            return float(value[0]), value[1]
-        else:
-            return 0, ''
+        return self._reading('1-0:21.7.0')
 
     def l2_power_delivered(self):
-        if '1-0:41.7.0' in self.metrics:
-            value = self.metrics['1-0:41.7.0'][0].split('*')
-            return float(value[0]), value[1]
-        else:
-            return 0, ''
+        return self._reading('1-0:41.7.0')
 
     def l3_power_delivered(self):
-        if '1-0:61.7.0' in self.metrics:
-            value = self.metrics['1-0:61.7.0'][0].split('*')
-            return float(value[0]), value[1]
-        else:
-            return 0, ''
+        return self._reading('1-0:61.7.0')
 
     def gas_delivered_reading(self):
-        if '0-1:24.2.1' in self.metrics:
-            value = self.metrics['0-1:24.2.1'][1].split('*')
-            return float(value[0]), value[1]
-        else:
-            return 0, ''
+        return self._reading('0-%s:24.2.1' % self.gas_channel, 1)
+
+    def samples(self):
+        """Return (metric name, labels, value) for each metric to publish, leaving out unavailable readings"""
+        samples = []
+
+        elec_labels = {'elec_eid': self.elec_eid()}
+        for name, reading in (('tariff1_delivered_reading', self.tariff1_delivered_reading()),
+                              ('tariff2_delivered_reading', self.tariff2_delivered_reading())):
+            if reading is not None:
+                samples.append((name, elec_labels, reading[0]))
+
+        active_tariff = self.tariff_indicator()
+        if active_tariff is not None:
+            for name, reading in (('power_delivered', self.power_delivered()),
+                                  ('l1_power_delivered', self.l1_power_delivered()),
+                                  ('l2_power_delivered', self.l2_power_delivered()),
+                                  ('l3_power_delivered', self.l3_power_delivered())):
+                if reading is not None:
+                    for tariff in [1, 2]:
+                        labels = dict(elec_labels, tariff_indicator=tariff)
+                        samples.append((name, labels, reading[0] if tariff == active_tariff else 0))
+
+        gas = self.gas_delivered_reading()
+        if gas is not None:
+            samples.append(('gas_delivered_reading', {'gas_eid': self.gas_eid()}, gas[0]))
+
+        return samples

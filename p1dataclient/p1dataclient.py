@@ -14,6 +14,16 @@ from p1telegram import TelegramAssembler, is_valid
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+GAUGES = [
+    ('tariff1_delivered_reading', 'tariff-1 delivered reading', ['elec_eid']),
+    ('tariff2_delivered_reading', 'tariff-2 delivered reading', ['elec_eid']),
+    ('power_delivered', 'Power delivered', ['elec_eid', 'tariff_indicator']),
+    ('l1_power_delivered', 'L1 Power delivered', ['elec_eid', 'tariff_indicator']),
+    ('l2_power_delivered', 'L2 Power delivered', ['elec_eid', 'tariff_indicator']),
+    ('l3_power_delivered', 'L3 Power delivered', ['elec_eid', 'tariff_indicator']),
+    ('gas_delivered_reading', 'Gas delivered', ['gas_eid']),
+]
+
 
 class P1DataClient(object):
     """P1DataClient class"""
@@ -23,20 +33,8 @@ class P1DataClient(object):
                              bytesize=EIGHTBITS, parity=PARITY_NONE, stopbits=STOPBITS_ONE)
         self.assembler = TelegramAssembler()
 
-        self.tariff1_delivered_reading_gauge = PrometheusClient.Gauge(
-            'tariff1_delivered_reading', 'tariff-1 delivered reading', ['elec_eid'])
-        self.tariff2_delivered_reading_gauge = PrometheusClient.Gauge(
-            'tariff2_delivered_reading', 'tariff-2 delivered reading', ['elec_eid'])
-        self.power_delivered_gauge = PrometheusClient.Gauge(
-            'power_delivered', 'Power delivered', ['elec_eid', 'tariff_indicator'])
-        self.l1_power_delivered_gauge = PrometheusClient.Gauge(
-            'l1_power_delivered', 'L1 Power delivered', ['elec_eid', 'tariff_indicator'])
-        self.l2_power_delivered_gauge = PrometheusClient.Gauge(
-            'l2_power_delivered', 'L2 Power delivered', ['elec_eid', 'tariff_indicator'])
-        self.l3_power_delivered_gauge = PrometheusClient.Gauge(
-            'l3_power_delivered', 'L3 Power delivered', ['elec_eid', 'tariff_indicator'])
-        self.gas_delivered_reading_gauge = PrometheusClient.Gauge(
-            'gas_delivered_reading', 'Gas delivered', ['gas_eid'])
+        self.gauges = {name: PrometheusClient.Gauge(name, description, labels)
+                       for name, description, labels in GAUGES}
         self.crc_errors_counter = PrometheusClient.Counter(
             'p1_telegram_crc_errors', 'Telegrams discarded because of an invalid CRC')
 
@@ -59,38 +57,8 @@ class P1DataClient(object):
 
     def store(self, metrics):
         """expose metrics to prometheus"""
-        self.tariff1_delivered_reading_gauge.labels(
-            elec_eid=metrics.elec_eid()
-        ).set(metrics.tariff1_delivered_reading()[0])
-
-        self.tariff2_delivered_reading_gauge.labels(
-            elec_eid=metrics.elec_eid()
-        ).set(metrics.tariff2_delivered_reading()[0])
-
-        for tariff_indicator in [1, 2]:
-            self.power_delivered_gauge.labels(
-                elec_eid=metrics.elec_eid(),
-                tariff_indicator=tariff_indicator
-            ).set(metrics.power_delivered()[0] if tariff_indicator == metrics.tariff_indicator() else 0)
-
-            self.l1_power_delivered_gauge.labels(
-                elec_eid=metrics.elec_eid(),
-                tariff_indicator=tariff_indicator
-            ).set(metrics.l1_power_delivered()[0] if tariff_indicator == metrics.tariff_indicator() else 0)
-
-            self.l2_power_delivered_gauge.labels(
-                elec_eid=metrics.elec_eid(),
-                tariff_indicator=tariff_indicator
-            ).set(metrics.l2_power_delivered()[0] if tariff_indicator == metrics.tariff_indicator() else 0)
-
-            self.l3_power_delivered_gauge.labels(
-                elec_eid=metrics.elec_eid(),
-                tariff_indicator=tariff_indicator
-            ).set(metrics.l3_power_delivered()[0] if tariff_indicator == metrics.tariff_indicator() else 0)
-
-        self.gas_delivered_reading_gauge.labels(
-            gas_eid=metrics.gas_eid()
-        ).set(metrics.gas_delivered_reading()[0])
+        for name, labels, value in metrics.samples():
+            self.gauges[name].labels(**labels).set(value)
 
     def run(self):
         """receive p1 data and expose the data and again and again ..."""

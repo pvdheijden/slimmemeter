@@ -48,10 +48,11 @@ The two services are independent long-running scripts with the same shape: a cli
 ## Behaviour to preserve
 
 - **Run as scripts, tested as a package.** `p1dataclient.py` uses `from p1datametrics import ...` and needs that directory as its cwd (supervisord sets it), while the test uses `from .p1datametrics import ...`. Don't change either style without updating the other.
-- **Absent metrics are normal.** Not all meters report every OBIS code, so each accessor returns `(0, '')` (or `''`/`None` for identifiers and the tariff indicator) instead of raising. New accessors must do the same.
-- **`store()` reads index `[0]` of the `(value, unit)` tuple.** Accessors parse `"000458.330*kWh"` into `(458.33, 'kWh')`. Gas is different: its OBIS entry has the timestamp first, so the reading is at raw index `[1]`.
+- **Absent metrics are normal.** Not all meters report every OBIS code. Accessors return `None` for an absent or malformed reading (`''` for identifiers) instead of raising, and `samples()` leaves it out, so Prometheus gets no value rather than a false 0. New readings should go through `_reading()`.
+- **`samples()` decides what is published, `store()` only writes it.** Keep that logic in `P1DataMetrics`, where it can be tested without `prometheus_client`. Calling `.labels()` alone creates a series with value 0, so only call it for values that exist.
+- **Gas is a special case.** Its OBIS entry has the timestamp first, so the reading is at index `[1]`, and its M-Bus channel is looked up from device type `003` rather than assumed to be 1.
 - **Metric names are an interface.** `conf/dashboard.json` queries gauges by name and label, so renaming one breaks the dashboard, and Prometheus history stays under the old name.
-- **`power_delivered` and `l{1,2,3}_power_delivered` are written for both `tariff_indicator` labels on each telegram.** The active tariff gets the value and the other gets 0, which the dashboard's per-tariff panels rely on.
+- **`power_delivered` and `l{1,2,3}_power_delivered` are published for both `tariff_indicator` labels.** The active tariff gets the value and the other gets 0, which the dashboard's per-tariff panels rely on.
 - **Temperature is in Kelvin.** The API call sets no `units`, and the dashboard subtracts 273.15.
 - **Target platform is old.** Binaries are ARMv6 on a Pi Zero, so check that new dependencies are available there.
 
