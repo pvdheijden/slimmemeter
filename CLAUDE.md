@@ -8,12 +8,12 @@ Reads Dutch smart-meter ("slimme meter") P1 telegrams over a serial port on a Ra
 
 ```
 meter --UART--> p1dataclient (:8000) --\
-OpenWeatherMap --> weather   (:8001) ---+--> Prometheus (:9090, 10s scrape) --> Grafana
+Buienradar     --> weather   (:8001) ---+--> Prometheus (:9090, 10s scrape) --> Grafana
 ```
 
 ## Commands
 
-Run from the repo root. There is no build step and no root `requirements.txt`, so CI installs only `flake8` and `pytest`. The tests need nothing else because `p1datametrics.py` and `p1telegram.py` are stdlib-only, so anything tested must stay free of `serial` and `prometheus_client` imports.
+Run from the repo root. There is no build step and no root `requirements.txt`, so CI installs only `flake8` and `pytest`. The tests need nothing else because `p1datametrics.py`, `p1telegram.py` and `weather/buienradar.py` are stdlib-only, so anything tested must stay free of `serial` and `prometheus_client` imports.
 
 ```shell
 pip install flake8 pytest
@@ -43,7 +43,7 @@ The two services are independent long-running scripts with the same shape: a cli
 - `p1telegram.py` does the framing (`/` line to `!` line) and CRC check on raw bytes, before anything is decoded. Telegrams that fail are dropped and counted in `p1_telegram_crc_errors_total`. `readline()` has a timeout and can return part of a line, so `TelegramAssembler.feed()` buffers until a line is complete.
 - `p1datametrics.py` is the pure parser. Its module docstring is an annotated example telegram, and `P1DataMetrics` maps OBIS codes (such as `1-0:1.8.1`) to lists of parenthesised values.
 
-**`weather/weather.py`** polls the OpenWeatherMap One Call API every 60s for a fixed location. `weather/__init__.py` imports a nonexistent `temperature` module, so `weather` also only works as a script.
+**`weather/`** follows the same split. `weather.py` fetches the Buienradar JSON feed every 5 minutes and publishes one station's readings (`BUIENRADAR_STATION_ID`, default 6356 Herwijnen), and `buienradar.py` is the stdlib-only parser. Buienradar's measurements are KNMI station data, updated every 10 minutes. Its terms require attribution with a link to buienradar.nl, which the dashboard carries.
 
 **`conf/`** holds the deployed config: supervisord programs, `prometheus.yml`, and the Grafana dashboard. `doc/` holds the DSMR P1 specs and hardware schematics.
 
@@ -56,12 +56,10 @@ The two services are independent long-running scripts with the same shape: a cli
 - **Metric names are an interface.** `conf/dashboard.json` queries gauges by name and label, so renaming one breaks the dashboard, and Prometheus history stays under the old name.
 - **`power_delivered` and `l{1,2,3}_power_delivered` are published for both `tariff_indicator` labels.** The active tariff gets the value and the other gets 0, which the dashboard's per-tariff panels rely on.
 - **A silent meter must stay visible.** Gauges keep their last value when telegrams stop, so `p1_last_telegram_timestamp_seconds` is what shows an outage (`time() - p1_last_telegram_timestamp_seconds` on the dashboard).
-- **Crashing is the recovery path.** supervisord restarts the client on unhandled exceptions such as `SerialException`, so don't add a broad `except` around the receive loop.
-- **Temperature is in Kelvin.** The API call sets no `units`, and the dashboard subtracts 273.15.
+- **Crashing is the recovery path for the P1 client.** supervisord restarts it on unhandled exceptions such as `SerialException`, so don't add a broad `except` around the receive loop. The weather client is different: network failures are expected, so it logs them and retries. Crashing there at boot would count as failed starts, and supervisord gives up after 3.
+- **Temperature is in Kelvin.** Buienradar reports Celsius, `buienradar.py` adds 273.15, and the dashboard subtracts it again. This keeps the history from the earlier OpenWeatherMap source consistent.
 - **Target platform is old.** Binaries are ARMv6 on a Pi Zero, so check that new dependencies are available there.
 
 ## Config gotchas
 
-- `conf/p1dataclient.conf` is the deployed supervisord file. `p1dataclient/p1dataclient.conf` is a stale copy that still uses `/home/pi` and `/usr/bin/python`.
-- INSTALL.md does not cover the `weather` service, although `conf/weather.conf` and its scrape job exist. It also misspells the config path as `conf/p1dataclint.conf`.
 - `prometheus.yml` scrapes a `node` job on `:9100`, but no node exporter is set up in this repo.
