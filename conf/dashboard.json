@@ -16,7 +16,16 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 2,
-  "links": [],
+  "links": [
+    {
+      "icon": "external link",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Weather data: Buienradar.nl",
+      "type": "link",
+      "url": "https://www.buienradar.nl"
+    }
+  ],
   "panels": [
     {
       "cacheTimeout": null,
@@ -797,7 +806,8 @@
           "value": "null"
         }
       ],
-      "valueName": "current"
+      "valueName": "current",
+      "description": "Weather data: [Buienradar.nl](https://www.buienradar.nl)"
     },
     {
       "cacheTimeout": null,
@@ -809,7 +819,7 @@
         "#FF780A"
       ],
       "decimals": 1,
-      "description": "",
+      "description": "Weather data: [Buienradar.nl](https://www.buienradar.nl)",
       "format": "pressurembar",
       "gauge": {
         "maxValue": 1400,
@@ -968,7 +978,8 @@
           "value": "null"
         }
       ],
-      "valueName": "current"
+      "valueName": "current",
+      "description": "Weather data: [Buienradar.nl](https://www.buienradar.nl)"
     },
     {
       "aliasColors": {},
@@ -1056,7 +1067,8 @@
       "yaxis": {
         "align": false,
         "alignLevel": null
-      }
+      },
+      "description": "Weather data: [Buienradar.nl](https://www.buienradar.nl)"
     },
     {
       "cacheTimeout": null,
