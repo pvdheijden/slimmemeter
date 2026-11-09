@@ -13,7 +13,9 @@
 set -euo pipefail
 
 PROMETHEUS_VERSION=3.16.0
-GRAFANA_VERSION=13.3.0
+# 13.1 is the last Grafana with the Prometheus data source built in. From 13.2 it is a
+# separate plugin, and its ARM build crashes on the ARMv6 of a Pi Zero (illegal instruction).
+GRAFANA_VERSION=13.1.9
 
 SERVICE_USER=${1:-pi}
 SRC=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -145,6 +147,7 @@ log "Configuring Grafana $GRAFANA_VERSION"
 ln -sfn "$GRAFANA" /opt/grafana
 cp "$APP/conf/grafana/datasource.yaml" "/opt/$GRAFANA/conf/provisioning/datasources/slimmemeter.yaml"
 cp "$APP/conf/grafana/dashboards.yaml" "/opt/$GRAFANA/conf/provisioning/dashboards/slimmemeter.yaml"
+cp "$APP/conf/grafana/custom.ini" "/opt/$GRAFANA/conf/custom.ini"
 
 # --- Supervisor -------------------------------------------------------------------------
 

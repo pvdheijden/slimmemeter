@@ -78,13 +78,16 @@ sudo cp ~/slimmemeter/conf/prometheus.yml /opt/prometheus/
 ```
 
 ### Grafana installation
-- Download (and unpack) the Grafana ARMv6 binary, see https://grafana.com/grafana/download?platform=arm for newer versions (choose 'Ubuntu and Debian (ARMv6)' and use its standalone binary)
+- Download (and unpack) the Grafana ARMv6 binary
+- Stay on Grafana 13.1 on a Pi Zero. From 13.2 the Prometheus data source is a separate plugin, and its ARM build crashes on the ARMv6 of a Pi Zero, so every panel shows an error. Newer 13.1.x releases are fine
+- `conf/grafana/custom.ini` stops Grafana from installing plugins from grafana.com in the background, for the same reason
 - Grafana stores its settings and users in `/opt/grafana/data`, inside the version directory
 ```shell script
 cd /opt
-sudo curl -LO https://dl.grafana.com/oss/release/grafana-13.3.0.linux-armv6.tar.gz
-sudo tar xzf grafana-13.3.0.linux-armv6.tar.gz
-sudo ln -s grafana-13.3.0 /opt/grafana
+sudo curl -LO https://dl.grafana.com/oss/release/grafana-13.1.9.linux-armv6.tar.gz
+sudo tar xzf grafana-13.1.9.linux-armv6.tar.gz --no-same-owner
+sudo ln -s grafana-13.1.9 /opt/grafana
+sudo cp ~/slimmemeter/conf/grafana/custom.ini /opt/grafana/conf/
 ```
 - After starting Grafana (port 3000, first login `admin`/`admin`), add a Prometheus data source with URL `http://localhost:9090` as the default data source
 - Import the dashboard for the P1-data (`conf/dashboard.json`)
@@ -129,7 +132,7 @@ sudo supervisorctl stop prometheus grafana
 
 sudo mv /opt/prometheus/data /opt/prometheus-3.16.0.linux-armv6/
 sudo ln -sfn prometheus-3.16.0.linux-armv6 /opt/prometheus
-sudo ln -sfn grafana-13.3.0 /opt/grafana
+sudo ln -sfn grafana-13.1.9 /opt/grafana
 
 sudo cp conf/grafana.conf /etc/supervisor/conf.d/
 sudo supervisorctl reread

@@ -60,7 +60,7 @@ The two services are independent long-running scripts with the same shape: a cli
 - **A silent meter must stay visible.** Gauges keep their last value when telegrams stop, so `p1_last_telegram_timestamp_seconds` is what shows an outage (`time() - p1_last_telegram_timestamp_seconds` on the dashboard).
 - **Crashing is the recovery path for the P1 client.** supervisord restarts it on unhandled exceptions such as `SerialException`, so don't add a broad `except` around the receive loop. The weather client is different: network failures are expected, so it logs them and retries. Crashing there at boot would count as failed starts, and supervisord gives up after 3.
 - **Temperature is in Kelvin.** Buienradar reports Celsius, `buienradar.py` adds 273.15, and the dashboard subtracts it again. This keeps the history from the earlier OpenWeatherMap source consistent.
-- **Target platform is old.** Binaries are ARMv6 on a Pi Zero, so check that new dependencies are available there.
+- **Target platform is old.** Binaries are ARMv6 on a Pi Zero, so check that new dependencies are available there. A download labelled ARMv6 is not proof: Grafana's ARMv6 archive runs, but from 13.2 its separate Prometheus plugin is built for ARMv7 and crashes with 'illegal instruction', so Grafana is pinned to 13.1 and its background plugin installs are off (`conf/grafana/custom.ini`). Test an upgrade on the Pi with the dashboard open.
 
 ## Config gotchas
 
