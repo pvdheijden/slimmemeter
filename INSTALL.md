@@ -15,13 +15,25 @@ Overall functionality, i.e. 'slimmemeter' consists of 4 applications
 
 The 4 applications are installed in /opt/<application> (logical link to /opt/<application>) managed with supervisord.
 
+### Serial port
+The meter is connected to the serial port of the Pi (GPIO 15, RXD). Raspberry Pi OS runs a login console on that port by default, so first enable the port without the console, on the Pi itself, and reboot. This is needed for both the installation over SSH and the installation by hand.
+- Interactively: `sudo raspi-config`, Interface Options > Serial Port, answer 'No' to a login shell over serial and 'Yes' to enabling the serial port hardware
+- Or without questions:
+```shell script
+sudo raspi-config nonint do_serial_cons 1   # 1 = no login console on the serial port
+sudo raspi-config nonint do_serial_hw 0     # 0 = serial port enabled
+sudo reboot
+```
+- After the reboot `ls -l /dev/serial0` shows the port, and `cat /proc/cmdline` no longer contains `console=serial0`
+- The user that runs the P1-data client needs to be in the `dialout` group, check with `groups`. On Raspberry Pi OS the first user is, otherwise add it with `sudo usermod -aG dialout <user>` (the installation over SSH does this)
+
 ### Installation over SSH
 `deploy/install-remote.sh` does the complete installation, or an upgrade, from another computer with a checkout of this repository. It copies the working tree to the Pi and runs `deploy/setup.sh` there with sudo, which carries out the steps below:
 ```shell script
 deploy/install-remote.sh pi@raspberrypi.local
 ```
 - The P1-data and weather clients run as the SSH login user, or as the user given as second argument. That user is added to the `dialout` group for the serial port
-- Enable the serial port first with `sudo raspi-config` (Interface Options > Serial Port: no login shell, hardware enabled) and reboot
+- Enable the serial port first, see 'Serial port'. Without it the script warns that `/dev/serial0` does not exist and the P1-data client keeps restarting
 - Grafana gets the Prometheus data source and the dashboard through provisioning (`conf/grafana/`), so no manual setup is needed
 - Run it again after a change, it only downloads what is missing. The application goes to `/opt/slimmemeter`, `DEPLOYED` there shows the version
 - The supervisor configuration files in `/etc/supervisor/conf.d/` are replaced, so put settings such as `LOG_LEVEL` in the files in `conf/`
