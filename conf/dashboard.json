@@ -38,7 +38,68 @@
   "timezone": "browser",
   "timepicker": {},
   "templating": {
-    "list": []
+    "list": [
+      {
+        "type": "textbox",
+        "name": "price_t1",
+        "label": "Electricity low €/kWh",
+        "description": "Variable electricity price for tariff 1 (low), including energy tax and VAT",
+        "hide": 0,
+        "query": "0.27",
+        "current": {
+          "selected": true,
+          "text": "0.27",
+          "value": "0.27"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "0.27",
+            "value": "0.27"
+          }
+        ]
+      },
+      {
+        "type": "textbox",
+        "name": "price_t2",
+        "label": "Electricity normal €/kWh",
+        "description": "Variable electricity price for tariff 2 (normal), including energy tax and VAT",
+        "hide": 0,
+        "query": "0.27",
+        "current": {
+          "selected": true,
+          "text": "0.27",
+          "value": "0.27"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "0.27",
+            "value": "0.27"
+          }
+        ]
+      },
+      {
+        "type": "textbox",
+        "name": "price_gas",
+        "label": "Gas €/m³",
+        "description": "Variable gas price, including energy tax and VAT",
+        "hide": 0,
+        "query": "1.35",
+        "current": {
+          "selected": true,
+          "text": "1.35",
+          "value": "1.35"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "1.35",
+            "value": "1.35"
+          }
+        ]
+      }
+    ]
   },
   "schemaVersion": 41,
   "version": 1,
@@ -63,7 +124,7 @@
       "description": "Power used from the grid now, all phases (1-0:1.7.0)",
       "gridPos": {
         "h": 5,
-        "w": 4,
+        "w": 5,
         "x": 0,
         "y": 1
       },
@@ -114,7 +175,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "auto",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -123,12 +184,12 @@
     {
       "id": 3,
       "type": "bargauge",
-      "title": "Power per phase",
+      "title": "Power per phase now",
       "description": "Power per phase now. The scale is 5.75 kW, a 25 A fuse at 230 V",
       "gridPos": {
         "h": 5,
-        "w": 6,
-        "x": 4,
+        "w": 7,
+        "x": 5,
         "y": 1
       },
       "targets": [
@@ -210,7 +271,7 @@
       "gridPos": {
         "h": 5,
         "w": 4,
-        "x": 10,
+        "x": 12,
         "y": 1
       },
       "targets": [
@@ -252,7 +313,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "auto",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -266,8 +327,8 @@
       "description": "Gas used since midnight. The meter reports the gas reading once an hour",
       "gridPos": {
         "h": 5,
-        "w": 3,
-        "x": 14,
+        "w": 4,
+        "x": 16,
         "y": 1
       },
       "targets": [
@@ -309,7 +370,7 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "auto",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -323,8 +384,8 @@
       "description": "Weather data: [Buienradar.nl](https://www.buienradar.nl)",
       "gridPos": {
         "h": 5,
-        "w": 3,
-        "x": 17,
+        "w": 4,
+        "x": 20,
         "y": 1
       },
       "targets": [
@@ -374,7 +435,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "auto",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
@@ -382,70 +443,6 @@
     },
     {
       "id": 7,
-      "type": "stat",
-      "title": "Last telegram",
-      "description": "Time since the last valid telegram from the meter. It sends one every 10 seconds",
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 20,
-        "y": 1
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "time() - p1_last_telegram_timestamp_seconds",
-          "legendFormat": "__auto",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 60
-              },
-              {
-                "color": "red",
-                "value": 300
-              }
-            ]
-          },
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "textMode": "value",
-        "orientation": "auto",
-        "wideLayout": true,
-        "showPercentChange": false
-      }
-    },
-    {
-      "id": 8,
       "type": "row",
       "title": "Electricity",
       "collapsed": false,
@@ -458,13 +455,13 @@
       "panels": []
     },
     {
-      "id": 9,
+      "id": 8,
       "type": "timeseries",
       "title": "Power per phase",
-      "description": "Stacked, the top is the total power",
+      "description": "Stacked, the top is the total power used. Power returned to the grid, from solar panels for example, shows below zero",
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 7
       },
@@ -489,6 +486,13 @@
           "legendFormat": "L3",
           "range": true,
           "instant": false
+        },
+        {
+          "refId": "D",
+          "expr": "-sum(power_returned)",
+          "legendFormat": "Returned",
+          "range": true,
+          "instant": false
         }
       ],
       "fieldConfig": {
@@ -511,8 +515,109 @@
           },
           "color": {
             "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Returned"
+            },
+            "properties": [
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Current per phase",
+      "description": "Current per phase in whole amperes. The dashed line is a 25 A fuse",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "phase_current",
+          "legendFormat": "{{phase}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "amp",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "lineInterpolation": "stepAfter",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "barAlignment": -1,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
           },
-          "min": 0
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 25
+              }
+            ]
+          }
         },
         "overrides": []
       },
@@ -947,7 +1052,7 @@
     {
       "id": 15,
       "type": "row",
-      "title": "Weather",
+      "title": "Costs and trends",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -959,6 +1064,958 @@
     },
     {
       "id": 16,
+      "type": "stat",
+      "title": "Cost today",
+      "description": "Electricity and gas used since midnight, at the variable prices. Prices are the variables at the top of the dashboard",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 33
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum((max_over_time(tariff1_delivered_reading[$__range]) - min_over_time(tariff1_delivered_reading[$__range])) * $price_t1 + (max_over_time(tariff2_delivered_reading[$__range]) - min_over_time(tariff2_delivered_reading[$__range])) * $price_t2) + (sum((max_over_time(gas_delivered_reading[$__range]) - min_over_time(gas_delivered_reading[$__range])) * $price_gas) or vector(0))",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyEUR",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "timeFrom": "now/d"
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "Cost this month",
+      "description": "Electricity and gas used since the 1st, at the variable prices. Prices are the variables at the top of the dashboard",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 33
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum((max_over_time(tariff1_delivered_reading[$__range]) - min_over_time(tariff1_delivered_reading[$__range])) * $price_t1 + (max_over_time(tariff2_delivered_reading[$__range]) - min_over_time(tariff2_delivered_reading[$__range])) * $price_t2) + (sum((max_over_time(gas_delivered_reading[$__range]) - min_over_time(gas_delivered_reading[$__range])) * $price_gas) or vector(0))",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyEUR",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "timeFrom": "now/M"
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Electricity this month",
+      "description": "Electricity used since the 1st of the month",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 33
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(max_over_time(tariff1_delivered_reading[$__range]) - min_over_time(tariff1_delivered_reading[$__range])) + (max_over_time(tariff2_delivered_reading[$__range]) - min_over_time(tariff2_delivered_reading[$__range]))",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "timeFrom": "now/M"
+    },
+    {
+      "id": 19,
+      "type": "stat",
+      "title": "Gas this month",
+      "description": "Gas used since the 1st of the month",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 33
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max_over_time(gas_delivered_reading[$__range]) - min_over_time(gas_delivered_reading[$__range])",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m3",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "timeFrom": "now/M"
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Electricity, last 30 days",
+      "description": "Electricity used in the last 30 days and in the 30 days before",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 33
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(max_over_time(tariff1_delivered_reading[30d]) - min_over_time(tariff1_delivered_reading[30d])) + (max_over_time(tariff2_delivered_reading[30d]) - min_over_time(tariff2_delivered_reading[30d]))",
+          "legendFormat": "Last 30 days",
+          "range": false,
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "expr": "(max_over_time(tariff1_delivered_reading[30d] offset 30d) - min_over_time(tariff1_delivered_reading[30d] offset 30d)) + (max_over_time(tariff2_delivered_reading[30d] offset 30d) - min_over_time(tariff2_delivered_reading[30d] offset 30d))",
+          "legendFormat": "30 days before",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Gas, last 30 days",
+      "description": "Gas used in the last 30 days and in the 30 days before",
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 33
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max_over_time(gas_delivered_reading[30d]) - min_over_time(gas_delivered_reading[30d])",
+          "legendFormat": "Last 30 days",
+          "range": false,
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "expr": "max_over_time(gas_delivered_reading[30d] offset 30d) - min_over_time(gas_delivered_reading[30d] offset 30d)",
+          "legendFormat": "30 days before",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m3",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Cost per day",
+      "description": "Electricity and gas per day at the variable prices, without fixed charges. Days run from midnight UTC. Prices are the variables at the top of the dashboard",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(max_over_time(tariff1_delivered_reading[1d] offset -1d) - min_over_time(tariff1_delivered_reading[1d] offset -1d)) * $price_t1 + (max_over_time(tariff2_delivered_reading[1d] offset -1d) - min_over_time(tariff2_delivered_reading[1d] offset -1d)) * $price_t2",
+          "legendFormat": "Electricity",
+          "range": true,
+          "instant": false,
+          "interval": "1d"
+        },
+        {
+          "refId": "B",
+          "expr": "(max_over_time(gas_delivered_reading[1d] offset -1d) - min_over_time(gas_delivered_reading[1d] offset -1d)) * $price_gas",
+          "legendFormat": "Gas",
+          "range": true,
+          "instant": false,
+          "interval": "1d"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyEUR",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "lineInterpolation": "linear",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "barAlignment": -1
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Electricity"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Gas"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "timeFrom": "30d"
+    },
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "Base load and peak power per day",
+      "description": "Peak: the highest power of the day. Base load: the lowest 10-minute average of the day, the devices that are always on. Days run from midnight UTC",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 38
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(max_over_time(power_delivered[1d] offset -1d))",
+          "legendFormat": "Peak",
+          "range": true,
+          "instant": false,
+          "interval": "1d"
+        },
+        {
+          "refId": "B",
+          "expr": "min_over_time(sum(avg_over_time(power_delivered[10m]))[1d:5m] offset -1d)",
+          "legendFormat": "Base load",
+          "range": true,
+          "instant": false,
+          "interval": "1d"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatt",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "lineInterpolation": "linear",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "barAlignment": -1
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Peak"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Base load"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "timeFrom": "30d"
+    },
+    {
+      "id": 24,
+      "type": "row",
+      "title": "Grid quality",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "panels": []
+    },
+    {
+      "id": 25,
+      "type": "timeseries",
+      "title": "Voltage sags per day",
+      "description": "Voltage sags counted by the meter per phase and day. Many sags on one phase point to a large load switching on, or a weak connection. Days run from midnight UTC",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 47
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max_over_time(voltage_sags[1d] offset -1d) - min_over_time(voltage_sags[1d] offset -1d)",
+          "legendFormat": "{{phase}}",
+          "range": true,
+          "instant": false,
+          "interval": "1d"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "lineInterpolation": "linear",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "barAlignment": -1
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "timeFrom": "30d"
+    },
+    {
+      "id": 26,
+      "type": "stat",
+      "title": "Voltage sags",
+      "description": "Voltage sags per phase since the meter was installed",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 47
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "voltage_sags",
+          "legendFormat": "{{phase}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 27,
+      "type": "stat",
+      "title": "Voltage swells",
+      "description": "Voltage swells per phase since the meter was installed",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 47
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "voltage_swells",
+          "legendFormat": "{{phase}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 28,
+      "type": "stat",
+      "title": "Power failures",
+      "description": "Power failures in any phase since the meter was installed. A long failure lasts more than 3 minutes",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 47
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "power_failures",
+          "legendFormat": "Short",
+          "range": true,
+          "instant": false
+        },
+        {
+          "refId": "B",
+          "expr": "long_power_failures",
+          "legendFormat": "Long",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 29,
+      "type": "stat",
+      "title": "Voltage sags in range",
+      "description": "Voltage sags per phase in the selected time range",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 51
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max_over_time(voltage_sags[$__range]) - min_over_time(voltage_sags[$__range])",
+          "legendFormat": "{{phase}}",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 30,
+      "type": "stat",
+      "title": "Power failures in range",
+      "description": "Short and long power failures in the selected time range",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 51
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(max_over_time(power_failures[$__range]) - min_over_time(power_failures[$__range])) + (max_over_time(long_power_failures[$__range]) - min_over_time(long_power_failures[$__range]))",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 31,
+      "type": "row",
+      "title": "Weather",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "panels": []
+    },
+    {
+      "id": 32,
       "type": "timeseries",
       "title": "Outside temperature",
       "description": "Weather data: [Buienradar.nl](https://www.buienradar.nl)",
@@ -966,7 +2023,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 33
+        "y": 56
       },
       "targets": [
         {
@@ -1032,7 +2089,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 33,
       "type": "timeseries",
       "title": "Humidity and air pressure",
       "description": "Weather data: [Buienradar.nl](https://www.buienradar.nl)",
@@ -1040,7 +2097,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 56
       },
       "targets": [
         {
@@ -1114,7 +2171,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 34,
       "type": "row",
       "title": "Meter",
       "collapsed": false,
@@ -1122,12 +2179,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 63
       },
       "panels": []
     },
     {
-      "id": 19,
+      "id": 35,
       "type": "stat",
       "title": "Electricity reading tariff 1 (low)",
       "description": "",
@@ -1135,7 +2192,7 @@
         "h": 3,
         "w": 6,
         "x": 0,
-        "y": 41
+        "y": 64
       },
       "targets": [
         {
@@ -1176,14 +2233,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "auto",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       }
     },
     {
-      "id": 20,
+      "id": 36,
       "type": "stat",
       "title": "Electricity reading tariff 2 (normal)",
       "description": "",
@@ -1191,7 +2248,7 @@
         "h": 3,
         "w": 6,
         "x": 6,
-        "y": 41
+        "y": 64
       },
       "targets": [
         {
@@ -1232,14 +2289,14 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "auto",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       }
     },
     {
-      "id": 21,
+      "id": 37,
       "type": "stat",
       "title": "Gas reading",
       "description": "",
@@ -1247,7 +2304,7 @@
         "h": 3,
         "w": 6,
         "x": 12,
-        "y": 41
+        "y": 64
       },
       "targets": [
         {
@@ -1288,22 +2345,198 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "auto",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
       }
     },
     {
-      "id": 22,
+      "id": 38,
+      "type": "stat",
+      "title": "Gas reading age",
+      "description": "Time since the gas meter took its last reading. It reports once an hour, an older reading means the gas meter is not reaching the electricity meter",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 64
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - gas_reading_timestamp_seconds",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 7200
+              },
+              {
+                "color": "red",
+                "value": 21600
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 39,
+      "type": "stat",
+      "title": "Returned reading tariff 1 (low)",
+      "description": "Electricity delivered back to the grid, from solar panels for example",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 67
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tariff1_returned_reading",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 40,
+      "type": "stat",
+      "title": "Returned reading tariff 2 (normal)",
+      "description": "Electricity delivered back to the grid, from solar panels for example",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 67
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "tariff2_returned_reading",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 41,
       "type": "stat",
       "title": "Telegrams with CRC errors",
       "description": "Telegrams discarded in the selected time range because their checksum did not match",
       "gridPos": {
         "h": 3,
         "w": 6,
-        "x": 18,
-        "y": 41
+        "x": 12,
+        "y": 67
       },
       "targets": [
         {
@@ -1352,7 +2585,71 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 42,
+      "type": "stat",
+      "title": "Last telegram",
+      "description": "Time since the last valid telegram from the meter. It sends one every 10 seconds",
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 67
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - p1_last_telegram_timestamp_seconds",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 300
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
         "orientation": "auto",
         "wideLayout": true,
         "showPercentChange": false
