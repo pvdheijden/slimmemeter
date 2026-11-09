@@ -40,21 +40,28 @@ sudo ln -s <src-dir> /opt/weather
 ```
 
 ### Prometheus installation
-- Download (and unpack) Prometheus ARMv6 binary from: https://prometheus.io/download/
+- Download (and unpack) the Prometheus ARMv6 binary, see https://prometheus.io/download/ for newer versions
 - Configure Prometheus to scrape the P1-data metrics (exposed on fixed port 8000) and the weather metrics (exposed on fixed port 8001)
+- Prometheus stores its data in `/opt/prometheus/data`, inside the version directory, see 'Upgrading Prometheus and Grafana'
 ```shell script
-tar xvf prometheus-2.13.1.linux-armv6.tar.gz
-sudo ln -s ./prometheus-2.13.1.linux-armv6 /opt/prometheus
-sudo cp conf/prometheus.yml /opt/prometheus/
+cd /opt
+sudo curl -LO https://github.com/prometheus/prometheus/releases/download/v3.16.0/prometheus-3.16.0.linux-armv6.tar.gz
+sudo tar xzf prometheus-3.16.0.linux-armv6.tar.gz
+sudo ln -s prometheus-3.16.0.linux-armv6 /opt/prometheus
+sudo cp ~/slimmemeter/conf/prometheus.yml /opt/prometheus/
 ```
 
 ### Grafana installation
-- Download (and unpack) Grafana ARMv6 binary from: https://grafana.com/grafana/download?platform=arm
-- Import the dashboard for the P1-data (`conf/dashboard.json`)
+- Download (and unpack) the Grafana ARMv6 binary, see https://grafana.com/grafana/download?platform=arm for newer versions (choose 'Ubuntu and Debian (ARMv6)' and use its standalone binary)
+- Grafana stores its settings and users in `/opt/grafana/data`, inside the version directory
 ```shell script
-tar xvf grafana-6.4.3.linux-armv6.tar.gz
-sudo ln -s ./grafana-6.4.3 /opt/grafana
+cd /opt
+sudo curl -LO https://dl.grafana.com/oss/release/grafana-13.3.0.linux-armv6.tar.gz
+sudo tar xzf grafana-13.3.0.linux-armv6.tar.gz
+sudo ln -s grafana-13.3.0 /opt/grafana
 ```
+- After starting Grafana (port 3000, first login `admin`/`admin`), add a Prometheus data source with URL `http://localhost:9090` as the default data source
+- Import the dashboard for the P1-data (`conf/dashboard.json`)
 
 ### Supervisor installation
 - Install the Supervisor package 
@@ -88,3 +95,23 @@ curl -s localhost:8000/metrics | grep '^p1_'
 - Metrics a meter does not provide now show 'no value' instead of 0, for example L2 and L3 on a single-phase meter
 - The weather client now uses Buienradar, because the OpenWeatherMap API it used was closed. It needs no API key
 - The packages installed earlier with `sudo pip install` are no longer used and can be removed
+
+### Upgrading Prometheus and Grafana
+Install the new versions next to the old ones as described above, then move the Prometheus data across and point the links at the new versions. Prometheus 3 reads the data of Prometheus 2, but once it has written to it Prometheus 2.55 is the oldest version that can go back to it.
+```shell script
+sudo supervisorctl stop prometheus grafana
+
+sudo mv /opt/prometheus/data /opt/prometheus-3.16.0.linux-armv6/
+sudo ln -sfn prometheus-3.16.0.linux-armv6 /opt/prometheus
+sudo ln -sfn grafana-13.3.0 /opt/grafana
+
+sudo cp conf/grafana.conf /etc/supervisor/conf.d/
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start prometheus grafana
+```
+- Grafana 13 is started with `bin/grafana server`, `bin/grafana-server` no longer exists, hence the new `conf/grafana.conf`
+- A fresh Grafana is simpler than migrating the database of Grafana 6: add the data source and import `conf/dashboard.json` as for a new installation. The old Grafana directory keeps its data in case it is needed
+- The dashboard uses the old 'Graph' and 'Singlestat' panels. Grafana 13 converts them to 'Time series' and 'Stat' panels when it opens the dashboard. Save it to keep the conversion
+- Check that `p1dataclient`, `weather` and `prometheus` are 'UP' on http://\<pi\>:9090/targets. The `node` target stays 'DOWN' as no node exporter is installed
+- Remove the old version directories when everything works
