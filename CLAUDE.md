@@ -13,10 +13,10 @@ Buienradar     --> weather   (:8001) ---+--> Prometheus (:9090, 10s scrape) --> 
 
 ## Commands
 
-Run from the repo root. There is no build step and no root `requirements.txt`, so CI installs only `flake8` and `pytest`. The tests need nothing else because `p1datametrics.py`, `p1telegram.py` and `weather/buienradar.py` are stdlib-only, so anything tested must stay free of `serial` and `prometheus_client` imports.
+Run from the repo root. There is no build step. CI installs the root `requirements.txt` plus `flake8` and `pytest`. The parsing modules (`p1datametrics.py`, `p1telegram.py`, `weather/buienradar.py`) are kept stdlib-only. Tests import the services as packages, so they can't import the script modules `p1dataclient.py` and `weather.py`, which use script-style imports.
 
 ```shell
-pip install flake8 pytest
+pip install -r requirements.txt flake8 pytest
 
 pytest                                                                   # all tests
 pytest p1dataclient/test_p1datametrics.py::TestP1DataMetrics::test_gas_eid   # single test
@@ -25,7 +25,7 @@ flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics       # CI ga
 flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics   # CI, advisory
 ```
 
-Running the services for real needs their dependencies (`pip install -r <service>/requirements.txt`, or `pipenv` with each service's `Pipfile`). Each service has its own dependency set.
+Both services share one pinned `requirements.txt` at the root and, on the Pi, one virtual environment in `/opt/slimmemeter-venv` that the supervisord configs run. Pins must keep working on Python 3.9, and on ARMv6, so only pure-Python packages or ones with ARMv6 wheels. Add new dependencies there with an exact version.
 
 ```shell
 cd p1dataclient && python3 p1dataclient.py /dev/serial0   # needs the meter on a serial port
