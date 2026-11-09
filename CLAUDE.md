@@ -41,7 +41,8 @@ The two services are independent long-running scripts with the same shape: a cli
 **`p1dataclient/`** separates I/O from parsing:
 - `p1dataclient.py` owns the serial port (115200 8N1) and the metrics. `receive()` blocks until it has a telegram with a valid CRC.
 - `p1telegram.py` does the framing (`/` line to `!` line) and CRC check on raw bytes, before anything is decoded. Telegrams that fail are dropped and counted in `p1_telegram_crc_errors_total`. `readline()` has a timeout and can return part of a line, so `TelegramAssembler.feed()` buffers until a line is complete.
-- `p1datametrics.py` is the pure parser. Its module docstring is an annotated example telegram, and `P1DataMetrics` maps OBIS codes (such as `1-0:1.8.1`) to lists of parenthesised values.
+- `p1datametrics.py` is the pure parser. Its module docstring is an annotated example telegram, and `P1DataMetrics` maps OBIS codes (such as `1-0:1.8.1`) to lists of parenthesised values. Readings with a unit go through `_reading()`, plain counts (voltage sags, power failures) through `_count()`, and meter timestamps (`YYMMDDhhmmss` plus `W` for CET or `S` for CEST) through `_timestamp()`.
+- The original per-phase power metrics are separate names (`l1_power_delivered`), the later per-phase metrics (`phase_current`, `phase_power_returned`, `voltage_sags`, `voltage_swells`) use a `phase` label. The meter's counters are published as gauges, as the meter sets their value.
 
 **`weather/`** follows the same split. `weather.py` fetches the Buienradar JSON feed every 5 minutes and publishes one station's readings (`BUIENRADAR_STATION_ID`, default 6356 Herwijnen), and `buienradar.py` is the stdlib-only parser. Buienradar's measurements are KNMI station data, updated every 10 minutes. Its terms require attribution with a link to buienradar.nl, which the dashboard carries.
 
@@ -63,5 +64,7 @@ The two services are independent long-running scripts with the same shape: a cli
 - **Target platform is old.** Binaries are ARMv6 on a Pi Zero, so check that new dependencies are available there. A download labelled ARMv6 is not proof: Grafana's ARMv6 archive runs, but from 13.2 its separate Prometheus plugin is built for ARMv7 and crashes with 'illegal instruction', so Grafana is pinned to 13.1 and its background plugin installs are off (`conf/grafana/custom.ini`). Test an upgrade on the Pi with the dashboard open.
 
 ## Config gotchas
+
+- Prometheus keeps 10 years of data, capped at 4 GB (`conf/prometheus.conf`). Its default of 15 days would cut the daily panels short and lose the energy history.
 
 - `prometheus.yml` scrapes a `node` job on `:9100`, but no node exporter is set up in this repo.

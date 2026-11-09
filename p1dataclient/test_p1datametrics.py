@@ -76,12 +76,55 @@ class TestP1DataMetrics(unittest.TestCase):
     def test_samples(self):
         eid = '4530303236303030303331313138333136'
         samples = self.metrics.samples()
-        self.assertEqual(len(samples), 11)
+        gas_eid = '4730303235303033343137303833333136'
+        samples = self.metrics.samples()
+        # 11 power and gas, 3 returned, 2 power failures, 4 per phase for 3 phases, gas timestamp
+        self.assertEqual(len(samples), 29)
         self.assertIn(('tariff1_delivered_reading', {'elec_eid': eid}, 458.330), samples)
         self.assertIn(('power_delivered', {'elec_eid': eid, 'tariff_indicator': 1}, 0.513), samples)
         self.assertIn(('power_delivered', {'elec_eid': eid, 'tariff_indicator': 2}, 0), samples)
         self.assertIn(('l3_power_delivered', {'elec_eid': eid, 'tariff_indicator': 1}, 0.012), samples)
-        self.assertIn(('gas_delivered_reading', {'gas_eid': '4730303235303033343137303833333136'}, 528.862), samples)
+        self.assertIn(('gas_delivered_reading', {'gas_eid': gas_eid}, 528.862), samples)
+        self.assertIn(('gas_reading_timestamp_seconds', {'gas_eid': gas_eid}, 1480374000.0), samples)
+        self.assertIn(('tariff2_returned_reading', {'elec_eid': eid}, 0.0), samples)
+        self.assertIn(('power_returned', {'elec_eid': eid}, 0.0), samples)
+        self.assertIn(('power_failures', {'elec_eid': eid}, 1), samples)
+        self.assertIn(('long_power_failures', {'elec_eid': eid}, 1), samples)
+        self.assertIn(('phase_current', {'elec_eid': eid, 'phase': 'L2'}, 1.0), samples)
+        self.assertIn(('phase_power_returned', {'elec_eid': eid, 'phase': 'L3'}, 0.0), samples)
+        self.assertIn(('voltage_sags', {'elec_eid': eid, 'phase': 'L3'}, 102), samples)
+        self.assertIn(('voltage_swells', {'elec_eid': eid, 'phase': 'L1'}, 0), samples)
+
+    def test_phase_current(self):
+        self.assertEqual(self.metrics.phase_current('L1'), (0.0, 'A'))
+        self.assertEqual(self.metrics.phase_current('L2'), (1.0, 'A'))
+
+    def test_voltage_sags_and_swells(self):
+        self.assertEqual(self.metrics.voltage_sags('L3'), 102)
+        self.assertEqual(self.metrics.voltage_swells('L3'), 0)
+
+    def test_power_failures(self):
+        self.assertEqual(self.metrics.power_failures(), 1)
+        self.assertEqual(self.metrics.long_power_failures(), 1)
+
+    def test_gas_reading_timestamp_winter_time(self):
+        # 29-11-2016 00:00:00 CET is 28-11-2016 23:00:00 UTC
+        self.assertEqual(self.metrics.gas_reading_timestamp(), 1480374000.0)
+
+
+class TestGasReadingTimestamp(unittest.TestCase):
+    """Meter timestamps are Dutch local time"""
+
+    def test_summer_time(self):
+        # 01-07-2026 12:00:00 CEST is 10:00:00 UTC
+        metrics = P1DataMetrics('0-1:24.2.1(260701120000S)(22844.471*m3)\r\n')
+        self.assertEqual(metrics.gas_reading_timestamp(), 1782900000.0)
+
+    def test_malformed_timestamps(self):
+        for value in ('()', '(261109160000)', '(261309160000W)', '(2611091600W)'):
+            metrics = P1DataMetrics('0-1:24.2.1%s(22844.471*m3)\r\n' % value)
+            self.assertIsNone(metrics.gas_reading_timestamp(), value)
+            self.assertEqual(metrics.gas_delivered_reading(), (22844.471, 'm3'))
 
 
 def names(samples):
@@ -127,6 +170,18 @@ class TestAbsentAndMalformed(unittest.TestCase):
     def test_single_phase_meter_has_no_l2_l3_samples(self):
         samples = P1DataMetrics('0-0:96.14.0(0001)\r\n1-0:21.7.0(00.171*kW)\r\n').samples()
         self.assertEqual(names(samples), {'l1_power_delivered'})
+
+    def test_single_phase_meter_has_no_l2_l3_phase_samples(self):
+        samples = P1DataMetrics('1-0:31.7.0(004*A)\r\n1-0:32.32.0(00003)\r\n').samples()
+        self.assertEqual([(name, labels['phase']) for name, labels, _ in samples],
+                         [('phase_current', 'L1'), ('voltage_sags', 'L1')])
+
+    def test_malformed_counts(self):
+        for value in ('()', '(abc)', '(00003*A)', '(-1)', ''):
+            metrics = P1DataMetrics('0-0:96.7.21%s\r\n1-0:72.32.0%s\r\n' % (value, value))
+            self.assertIsNone(metrics.power_failures(), value)
+            self.assertIsNone(metrics.voltage_sags('L3'), value)
+            self.assertEqual(metrics.samples(), [], value)
 
     def test_unknown_tariff_has_no_power_samples(self):
         samples = P1DataMetrics('1-0:1.7.0(00.513*kW)\r\n1-0:1.8.1(000458.330*kWh)\r\n').samples()

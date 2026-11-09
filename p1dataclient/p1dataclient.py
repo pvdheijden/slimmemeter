@@ -27,6 +27,17 @@ GAUGES = [
     ('l2_power_delivered', 'L2 Power delivered', ['elec_eid', 'tariff_indicator']),
     ('l3_power_delivered', 'L3 Power delivered', ['elec_eid', 'tariff_indicator']),
     ('gas_delivered_reading', 'Gas delivered', ['gas_eid']),
+    ('gas_reading_timestamp_seconds', 'Unix time of the last gas reading, the gas meter reports once an hour',
+     ['gas_eid']),
+    ('tariff1_returned_reading', 'tariff-1 returned reading in kWh', ['elec_eid']),
+    ('tariff2_returned_reading', 'tariff-2 returned reading in kWh', ['elec_eid']),
+    ('power_returned', 'Power returned to the grid in kW', ['elec_eid']),
+    ('phase_power_returned', 'Power returned to the grid per phase in kW', ['elec_eid', 'phase']),
+    ('phase_current', 'Current per phase in A, whole amperes', ['elec_eid', 'phase']),
+    ('voltage_sags', 'Number of voltage sags per phase, counted by the meter', ['elec_eid', 'phase']),
+    ('voltage_swells', 'Number of voltage swells per phase, counted by the meter', ['elec_eid', 'phase']),
+    ('power_failures', 'Number of power failures in any phase, counted by the meter', ['elec_eid']),
+    ('long_power_failures', 'Number of long power failures in any phase, counted by the meter', ['elec_eid']),
 ]
 
 
