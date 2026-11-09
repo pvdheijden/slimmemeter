@@ -1,3 +1,6 @@
 *.pyc
 .vscode
 .idea
+
+# Pico WiFi settings, see pico/config.example.py
+pico/config.py
