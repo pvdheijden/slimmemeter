@@ -1,5 +1,9 @@
 """
 Receive P1-data from slimmemeter via UART and store into Prometeus to be presented with Grafana.
+
+The input is a serial device such as /dev/serial0, or a network address such as
+socket://pico:2000 where a Raspberry Pi Pico forwards the P1 data (see PICO.md). It is the
+first argument, or P1_URL when there is no argument.
 """
 
 import os
@@ -7,7 +11,7 @@ import sys
 import signal
 import logging
 
-from serial import Serial, EIGHTBITS, PARITY_NONE, STOPBITS_ONE
+from serial import serial_for_url, EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 
 import prometheus_client as PrometheusClient
 from p1datametrics import P1DataMetrics
@@ -17,6 +21,7 @@ logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO').upper(),
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 SERIAL_TIMEOUT_SECONDS = 5
+METRICS_PORT = int(os.environ.get('METRICS_PORT', '8000'))
 STALE_AFTER_SECONDS = 30
 
 GAUGES = [
@@ -45,9 +50,10 @@ class P1DataClient(object):
     """P1DataClient class"""
 
     def __init__(self, serial):
-        self.serial = Serial(serial, 115200,
-                             bytesize=EIGHTBITS, parity=PARITY_NONE, stopbits=STOPBITS_ONE,
-                             timeout=SERIAL_TIMEOUT_SECONDS)
+        # A socket:// connection that drops raises SerialException, and the restart reconnects
+        self.serial = serial_for_url(serial, 115200,
+                                     bytesize=EIGHTBITS, parity=PARITY_NONE, stopbits=STOPBITS_ONE,
+                                     timeout=SERIAL_TIMEOUT_SECONDS)
         self.assembler = TelegramAssembler()
         self.staleness = StalenessMonitor(STALE_AFTER_SECONDS)
 
@@ -58,7 +64,7 @@ class P1DataClient(object):
         self.last_telegram_gauge = PrometheusClient.Gauge(
             'p1_last_telegram_timestamp_seconds', 'Unix time of the last valid telegram')
 
-        PrometheusClient.start_http_server(8000)
+        PrometheusClient.start_http_server(METRICS_PORT)
 
     def receive(self):
         """receive p1 data, telegrams with an invalid CRC are discarded"""
@@ -97,7 +103,9 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGTERM, sigterm_handler)
 
-    SERIAL = sys.argv[1]
+    SERIAL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('P1_URL')
+    if not SERIAL:
+        sys.exit('usage: p1dataclient.py <serial device or socket://host:port>, or set P1_URL')
 
     logging.info('running p1dataclient (%s)', SERIAL)
     P1DataClient(SERIAL).run()
