@@ -1,0 +1,15 @@
+# Dependencies of both services, installed in one virtual environment (see INSTALL.md).
+# Pinned so every install is the same. Requires Python 3.9 or newer.
+
+# p1dataclient
+pyserial==3.5
+
+# p1dataclient and weather
+prometheus_client==0.26.0
+
+# weather, and what requests needs
+requests==2.32.5
+certifi==2026.10.23
+charset-normalizer==3.5.2
+idna==3.20
+urllib3==2.6.3

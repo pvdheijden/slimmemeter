@@ -1,2 +1,0 @@
-pyserial
-prometheus_client

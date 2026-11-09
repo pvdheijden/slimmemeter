@@ -1,0 +1,12 @@
+# Grafana provisioning: the local Prometheus as default data source, which conf/dashboard.json uses.
+# deploy/setup.sh copies this to /opt/grafana/conf/provisioning/datasources/.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://localhost:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 10s  # the scrape interval in conf/prometheus.yml

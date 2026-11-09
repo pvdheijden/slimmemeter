@@ -1,3 +1,1 @@
-from temperature import openweather
-
-__all__ = [openweather]
+__all__ = ['weather', 'buienradar']
