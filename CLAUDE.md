@@ -13,7 +13,7 @@ Buienradar     --> weather   (:8001) ---+--> Prometheus (:9090, 10s scrape) --> 
 
 ## Commands
 
-Run from the repo root. There is no build step. CI installs the root `requirements.txt` plus `flake8` and `pytest`. The parsing modules (`p1datametrics.py`, `p1telegram.py`, `weather/buienradar.py`) are kept stdlib-only. Tests import the services as packages, so they can't import the script modules `p1dataclient.py` and `weather.py`, which use script-style imports.
+Run from the repo root. There is no build step. CI installs the root `requirements.txt` plus `flake8` and `pytest`. The parsing modules (`p1datametrics.py`, `p1telegram.py`, `weather/buienradar.py`) are kept stdlib-only. Tests import the services as packages, so they can't import the script modules `p1dataclient.py` and `weather.py`, which use script-style imports. `test_network_input.py` runs `p1dataclient.py` as a subprocess instead, and `pico/test_main.py` runs the MicroPython firmware under CPython with stand-ins for `machine`, `network` and `rp2`.
 
 ```shell
 pip install -r requirements.txt flake8 pytest
@@ -29,6 +29,7 @@ Both services share one pinned `requirements.txt` at the root and, on the Pi, on
 
 ```shell
 cd p1dataclient && python3 p1dataclient.py /dev/serial0   # needs the meter on a serial port
+cd p1dataclient && python3 p1dataclient.py socket://<pico>:2000   # or through a Pico, see PICO.md
 cd weather && python3 weather.py
 ```
 
@@ -39,7 +40,7 @@ Both services log at INFO. Set `LOG_LEVEL=DEBUG` to include raw telegrams and pa
 The two services are independent long-running scripts with the same shape: a client class that creates Prometheus gauges and starts the metrics HTTP server in `__init__`, then a `run()` loop of fetch and `store()`, plus a SIGTERM handler under `__main__`.
 
 **`p1dataclient/`** separates I/O from parsing:
-- `p1dataclient.py` owns the serial port (115200 8N1) and the metrics. `receive()` blocks until it has a telegram with a valid CRC.
+- `p1dataclient.py` owns the serial port (115200 8N1) and the metrics. `receive()` blocks until it has a telegram with a valid CRC. The input comes from `serial_for_url()`, so it is a device or a `socket://host:port` address, given as argument or in `P1_URL`. `METRICS_PORT` changes the metrics port (default 8000).
 - `p1telegram.py` does the framing (`/` line to `!` line) and CRC check on raw bytes, before anything is decoded. Telegrams that fail are dropped and counted in `p1_telegram_crc_errors_total`. `readline()` has a timeout and can return part of a line, so `TelegramAssembler.feed()` buffers until a line is complete.
 - `p1datametrics.py` is the pure parser. Its module docstring is an annotated example telegram, and `P1DataMetrics` maps OBIS codes (such as `1-0:1.8.1`) to lists of parenthesised values. Readings with a unit go through `_reading()`, plain counts (voltage sags, power failures) through `_count()`, and meter timestamps (`YYMMDDhhmmss` plus `W` for CET or `S` for CEST) through `_timestamp()`.
 - The original per-phase power metrics are separate names (`l1_power_delivered`), the later per-phase metrics (`phase_current`, `phase_power_returned`, `voltage_sags`, `voltage_swells`) use a `phase` label. The meter's counters are published as gauges, as the meter sets their value.
@@ -47,6 +48,8 @@ The two services are independent long-running scripts with the same shape: a cli
 **`weather/`** follows the same split. `weather.py` fetches the Buienradar JSON feed every 5 minutes and publishes one station's readings (`BUIENRADAR_STATION_ID`, default 6356 Herwijnen), and `buienradar.py` is the stdlib-only parser. Buienradar's measurements are KNMI station data, updated every 10 minutes. Its terms require attribution with a link to buienradar.nl, which the dashboard carries.
 
 **`conf/`** holds the deployed config: supervisord programs, `prometheus.yml`, the Grafana dashboard, and Grafana provisioning for the data source and dashboard (`conf/grafana/`). `doc/` holds the DSMR P1 specs and hardware schematics.
+
+**`pico/`** and **`docker/`** are the move described in [PICO.md](PICO.md): a Raspberry Pi Pico W forwards the raw P1 bytes on TCP port 2000 without parsing them, and the clients, Prometheus and Grafana run with docker compose on another host. `compose.pi.yaml` is the variant for while the Pi still reads the meter. In Docker, Prometheus and Grafana reach services by name, hence their own `docker/prometheus.yml` and `docker/grafana-datasource.yaml`.
 
 **`deploy/`** installs everything on a Pi. `install-remote.sh [user@]host` copies the working tree over SSH and runs `setup.sh` there as root. `setup.sh` is idempotent, pins the Prometheus and Grafana versions at its top (keep them in step with `INSTALL.md`), and moves the Prometheus data, which lives in the version directory, to a new version.
 
@@ -59,7 +62,7 @@ The two services are independent long-running scripts with the same shape: a cli
 - **Metric names are an interface.** `conf/dashboard.json` queries gauges by name and label, so renaming one breaks the dashboard, and Prometheus history stays under the old name.
 - **`power_delivered` and `l{1,2,3}_power_delivered` are published for both `tariff_indicator` labels.** The active tariff gets the value and the other gets 0, which the dashboard's per-tariff panels rely on.
 - **A silent meter must stay visible.** Gauges keep their last value when telegrams stop, so `p1_last_telegram_timestamp_seconds` is what shows an outage (`time() - p1_last_telegram_timestamp_seconds` on the dashboard).
-- **Crashing is the recovery path for the P1 client.** supervisord restarts it on unhandled exceptions such as `SerialException`, so don't add a broad `except` around the receive loop. The weather client is different: network failures are expected, so it logs them and retries. Crashing there at boot would count as failed starts, and supervisord gives up after 3.
+- **Crashing is the recovery path for the P1 client.** supervisord, or Docker, restarts it on unhandled exceptions such as `SerialException`, which is also how a dropped `socket://` connection to the Pico gets reconnected, so don't add a broad `except` around the receive loop. The weather client is different: network failures are expected, so it logs them and retries. Crashing there at boot would count as failed starts, and supervisord gives up after 3.
 - **Temperature is in Kelvin.** Buienradar reports Celsius, `buienradar.py` adds 273.15, and the dashboard subtracts it again. This keeps the history from the earlier OpenWeatherMap source consistent.
 - **Target platform is old.** Binaries are ARMv6 on a Pi Zero, so check that new dependencies are available there. A download labelled ARMv6 is not proof: Grafana's ARMv6 archive runs, but from 13.2 its separate Prometheus plugin is built for ARMv7 and crashes with 'illegal instruction', so Grafana is pinned to 13.1 and its background plugin installs are off (`conf/grafana/custom.ini`). Test an upgrade on the Pi with the dashboard open.
 
