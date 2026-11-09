@@ -1,0 +1,12 @@
+# Grafana provisioning in Docker: Prometheus as default data source, reached by its service name.
+# Same as conf/grafana/datasource.yaml on the Pi, apart from the URL.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 10s  # the scrape interval in prometheus.yml

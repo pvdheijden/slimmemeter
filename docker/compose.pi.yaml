@@ -1,0 +1,17 @@
+# While the Pi still reads the meter: no P1-data client container, Prometheus scrapes the
+# P1-data client on the Pi instead. Run from this directory:
+#
+#   PI_ADDRESS=192.168.1.244 docker compose -f compose.yaml -f compose.pi.yaml up -d --build
+#
+# Without this file the stack needs P1_URL, see compose.yaml.
+
+services:
+  p1dataclient:
+    # Only started when this profile is asked for, which it never is
+    profiles: [disabled]
+
+  prometheus:
+    volumes:
+      - ./prometheus-pi.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      - "slimmemeter:${PI_ADDRESS:?set PI_ADDRESS to the address of the Pi}"

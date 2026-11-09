@@ -1,0 +1,17 @@
+# Prometheus in Docker: the clients are reached by their service name in compose.yaml
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'p1dataclient'
+    static_configs:
+      - targets: ['p1dataclient:8000']
+
+  - job_name: 'weather'
+    static_configs:
+      - targets: ['weather:8001']

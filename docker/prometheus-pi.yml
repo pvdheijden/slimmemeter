@@ -1,0 +1,18 @@
+# Prometheus in Docker while the Pi still reads the meter: the P1 data comes from the
+# P1-data client on the Pi, see compose.pi.yaml
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'p1dataclient'
+    static_configs:
+      - targets: ['slimmemeter:8000']
+
+  - job_name: 'weather'
+    static_configs:
+      - targets: ['weather:8001']

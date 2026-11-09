@@ -1,0 +1,68 @@
+# slimmemeter as Docker containers: the P1-data client reads the meter through a Raspberry Pi
+# Pico on the network (see PICO.md). Run from this directory:
+#
+#   P1_URL=socket://<pico>:2000 docker compose up -d --build
+#
+# While the Pi still reads the meter, use compose.pi.yaml as well, see there.
+
+name: slimmemeter
+
+x-client: &client
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+  image: slimmemeter-clients
+  restart: unless-stopped
+  environment: &client-environment
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+services:
+  p1dataclient:
+    <<: *client
+    working_dir: /app/p1dataclient
+    command: ["python", "p1dataclient.py"]
+    environment:
+      <<: *client-environment
+      # The Pico, for example socket://192.168.1.50:2000. Without it the client stops with a message
+      # (not required here, so compose.pi.yaml works without it)
+      P1_URL: ${P1_URL:-}
+
+  weather:
+    <<: *client
+    working_dir: /app/weather
+    command: ["python", "weather.py"]
+    environment:
+      <<: *client-environment
+      BUIENRADAR_STATION_ID: ${BUIENRADAR_STATION_ID:-6356}
+
+  prometheus:
+    image: prom/prometheus:v3.16.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      # Keep the energy history for 10 years, or until it takes 4 GB, whichever comes first
+      - --storage.tsdb.retention.time=10y
+      - --storage.tsdb.retention.size=4GB
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:13.3.0
+    restart: unless-stopped
+    depends_on: [prometheus]
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasource.yaml:/etc/grafana/provisioning/datasources/slimmemeter.yaml:ro
+      - ../conf/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/slimmemeter.yaml:ro
+      # dashboards.yaml loads the dashboard from /opt/slimmemeter/conf, as on the Pi
+      - ../conf/dashboard.json:/opt/slimmemeter/conf/dashboard.json:ro
+    ports:
+      - "3000:3000"
+
+volumes:
+  prometheus-data:
+  grafana-data:
