@@ -1,0 +1,10 @@
+# Grafana provisioning: load conf/dashboard.json from the installed application.
+# deploy/setup.sh copies this to /opt/grafana/conf/provisioning/dashboards/.
+apiVersion: 1
+
+providers:
+  - name: slimmemeter
+    type: file
+    allowUiUpdates: true  # changes saved in Grafana last until dashboard.json itself changes
+    options:
+      path: /opt/slimmemeter/conf

@@ -45,7 +45,9 @@ The two services are independent long-running scripts with the same shape: a cli
 
 **`weather/`** follows the same split. `weather.py` fetches the Buienradar JSON feed every 5 minutes and publishes one station's readings (`BUIENRADAR_STATION_ID`, default 6356 Herwijnen), and `buienradar.py` is the stdlib-only parser. Buienradar's measurements are KNMI station data, updated every 10 minutes. Its terms require attribution with a link to buienradar.nl, which the dashboard carries.
 
-**`conf/`** holds the deployed config: supervisord programs, `prometheus.yml`, and the Grafana dashboard. `doc/` holds the DSMR P1 specs and hardware schematics.
+**`conf/`** holds the deployed config: supervisord programs, `prometheus.yml`, the Grafana dashboard, and Grafana provisioning for the data source and dashboard (`conf/grafana/`). `doc/` holds the DSMR P1 specs and hardware schematics.
+
+**`deploy/`** installs everything on a Pi. `install-remote.sh [user@]host` copies the working tree over SSH and runs `setup.sh` there as root. `setup.sh` is idempotent, pins the Prometheus and Grafana versions at its top (keep them in step with `INSTALL.md`), and moves the Prometheus data, which lives in the version directory, to a new version.
 
 ## Behaviour to preserve
 

@@ -15,6 +15,20 @@ Overall functionality, i.e. 'slimmemeter' consists of 4 applications
 
 The 4 applications are installed in /opt/<application> (logical link to /opt/<application>) managed with supervisord.
 
+### Installation over SSH
+`deploy/install-remote.sh` does the complete installation, or an upgrade, from another computer with a checkout of this repository. It copies the working tree to the Pi and runs `deploy/setup.sh` there with sudo, which carries out the steps below:
+```shell script
+deploy/install-remote.sh pi@raspberrypi.local
+```
+- The P1-data and weather clients run as the SSH login user, or as the user given as second argument. That user is added to the `dialout` group for the serial port
+- Enable the serial port first with `sudo raspi-config` (Interface Options > Serial Port: no login shell, hardware enabled) and reboot
+- Grafana gets the Prometheus data source and the dashboard through provisioning (`conf/grafana/`), so no manual setup is needed
+- Run it again after a change, it only downloads what is missing. The application goes to `/opt/slimmemeter`, `DEPLOYED` there shows the version
+- The supervisor configuration files in `/etc/supervisor/conf.d/` are replaced, so put settings such as `LOG_LEVEL` in the files in `conf/`
+- The script ends with a check of all services and the meter data, and exits with an error if something is wrong
+
+The sections below describe the same installation by hand.
+
 ### Python environment
 - The P1-data client and the weather client share one virtual environment in `/opt/slimmemeter-venv`, with the pinned versions from `requirements.txt`. Raspberry Pi OS (Bookworm and later) does not allow pip to install into the system Python
 - Requires Python 3.9 or newer, check with `python3 --version`
